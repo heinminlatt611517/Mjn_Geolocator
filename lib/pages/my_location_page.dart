@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_geolocator_example/network/RestApi.dart';
+import 'package:flutter_geolocator_example/utils/app_constants.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:location/location.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -24,10 +26,12 @@ class _MyLocationState extends State<MyLocation> {
 
   late GoogleMapController _controller;
   LatLng _initialcameraposition = LatLng(0.5937, 0.9629);
-
+  final readData = GetStorage();
+  var  saveTime ;
   @override
   void initState() {
     super.initState();
+    saveTime = readData.read(SAVE_TIME);
     getLoc();
   }
 
@@ -45,16 +49,17 @@ class _MyLocationState extends State<MyLocation> {
   @override
   Widget build(BuildContext context) {
 
-
-
     if (_currentPosition != null) {
-      Timer.periodic(Duration(seconds: 10), (timer) {
-        Map<String, String> map = {
-          'lat': _currentPosition!.latitude.toString(),
-          'lon': _currentPosition!.longitude.toString()
-        };
-        RestApi.sendLatAndLongHitToServer(map, widget.token);
-      });
+       if(saveTime < DateTime.now().minute){
+         Map<String, String> map = {
+           'lat': _currentPosition!.latitude.toString(),
+           'lon': _currentPosition!.longitude.toString()
+         };
+         RestApi.sendLatAndLongHitToServer(map, widget.token);
+
+         saveTime = DateTime.now().minute;
+
+       }
 
     }
     return Scaffold(
@@ -68,7 +73,7 @@ class _MyLocationState extends State<MyLocation> {
               child: Column(
                 children: [
                   Container(
-                    height: MediaQuery.of(context).size.height / 1.2,
+                    height: MediaQuery.of(context).size.height / 1.3,
                     width: MediaQuery.of(context).size.width,
                     child: GoogleMap(
                       initialCameraPosition: CameraPosition(
